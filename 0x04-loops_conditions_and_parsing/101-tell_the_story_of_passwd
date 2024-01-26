@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Displays a fictional story based on /etc/passwd using the while loop + IFS.
+
+exec 3< /etc/passwd
+
+while IFS=: read -a field -u 3; do
+    username="${field[0]}"
+    group_id="${field[3]}"
+    home_directory="${field[5]}"
+    shell="${field[6]}"
+    user_id="${field[2]}"
+    password="${field[1]}"
+    user_id_info="${field[4]}"
+
+    echo "The user $username is part of the $group_id gang, lives in $home_directory and rides $shell. User ID $user_id's place is protected by the passcode $password, more info about the user here: $user_id_info"
+done
+
