@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Kills the infinity and beyond program using SIGKILL signal
+# Get the pid of the program
+
+for pid in $(pgrep -f 4-to_infinity_and_beyond)
+do
+	kill -9 "$pid"
+done
+
