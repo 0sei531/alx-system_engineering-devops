@@ -1,5 +1,13 @@
-#!/usr/bin/env bash
-# Creates RSA key pair
+#!/bin/bash
 
-ssh-keygen -b 4096 -f ~/.ssh/libertine -t rsa -N "betty"
+# Check if the key pair already exists
+if [[ -f ~/.ssh/school && -f ~/.ssh/school.pub ]]; then
+    echo "Key pair 'school' already exists."
+    exit 1
+fi
+
+# Generate the RSA key pair with passphrase
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/school -N "betty"
+
+echo "Key pair 'school' created successfully."
 
