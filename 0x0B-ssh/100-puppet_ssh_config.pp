@@ -1,20 +1,13 @@
-# Set up SSH client configuration
-file { '/etc/ssh/ssh_config':
-  ensure  => file,
-  content => template('ssh_config.erb'),
+
+#!/usr/bin/env bash
+# connect with puppet
+file_line { 'Declare_identity_file':
+  path    => '/etc/ssh/ssh_config',
+  line    => 'IdentityFile ~/.ssh/school',
 }
 
-# Manage password authentication setting
-file_line { 'Turn off passwd auth':
-  ensure => present,
-  path   => '/etc/ssh/ssh_config',
-  line   => 'PasswordAuthentication no',
-}
-
-# Manage identity file setting
-file_line { 'Declare identity file':
-  ensure => present,
-  path   => '/etc/ssh/ssh_config',
-  line   => 'IdentityFile ~/.ssh/school',
+file_line { 'Turn_off_passwd_auth':
+  path    => '/etc/ssh/ssh_config',
+  line    => 'PasswordAuthentication no',
 }
 
