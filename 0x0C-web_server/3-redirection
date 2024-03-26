@@ -4,19 +4,22 @@
 apt-get update
 apt-get install -y nginx
 
-# Create custom HTML page with content "Best School"
-echo "Best School" > /etc/nginx/html/index.html
+# Create custom HTML page with content "Hello World"
+echo "Hello World" > /var/www/html/index.html
 
 # Configure Nginx redirection rule
 echo "server {
-    listen 80;
+    listen 80 default_server;
     listen [::]:80 default_server;
-    root   /etc/nginx/html;
+    root   /var/www/html;
     index  index.html;
     location /redirect_me {
         return 301 https://github.com/Osei531;
     }
 }" > /etc/nginx/sites-available/default
+
+# Create a symbolic link to enable the site
+ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
 
 # Restart Nginx service to apply changes
 service nginx restart
