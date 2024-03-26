@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Install nginx
+apt-get update
+apt-get install -y nginx
+
+# Ensure nginx is running
+service nginx start
+
+# Set up default Nginx configuration
+cat <<EOF > /etc/nginx/sites-available/default
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
+
+    server_name _;
+
+    location / {
+        try_files \$uri \$uri/ =404;
+    }
+
+    location = / {
+        echo "Hello World!";
+    }
+}
+EOF
+
+# Restart nginx to apply changes
+service nginx restart
+
