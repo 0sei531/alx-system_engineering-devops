@@ -1,25 +1,21 @@
-# Define a class to manage custom HTTP header configuration
-class custom_http_response_header {
+# Automation: installs and configures Nginx with a custom HTTP header response
 
-  # Install nginx package
-  package { 'nginx':
-    ensure  => installed,
-    require => Package['apt'],
-  }
+exec { 'update':
+  command => '/usr/bin/apt-get update',
+} ->
 
-  # Define the custom nginx configuration
-  file { '/etc/nginx/sites-available/default':
-    ensure  => file,
-    content => template('load_balancer/nginx_custom_header.erb'),
-    notify  => Service['nginx'],
-  }
+package { 'nginx':
+  ensure => installed,
+} ->
 
-  # Ensure nginx service is running and enabled
-  service { 'nginx':
-    ensure    => running,
-    enable    => true,
-    subscribe => File['/etc/nginx/sites-available/default'],
-    require   => Package['nginx'],
-  }
+file_line { 'header_served_by':
+  path     => '/etc/nginx/sites-available/default',
+  match    => '^server {',
+  line     => "server {\n\tadd_header X-Served-By \"${hostname}\";",
+  multiple => false,
+} ->
+
+exec { 'restart_nginx':
+  command => '/usr/sbin/service nginx restart',
 }
 

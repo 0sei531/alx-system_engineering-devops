@@ -1,25 +1,40 @@
 #!/usr/bin/env bash
-# This script configures Nginx to include a custom HTTP response header on a brand new Ubuntu machine.
+# Script to configure Nginx server with a custom header
 
-# Function to install and configure Nginx with custom headers
-function install_and_configure_nginx() {
-    apt-get update
-    apt-get install -y nginx
+# Update package lists
+sudo apt-get update
 
-    # Set up index.html and custom_404.html
-    echo 'Best School' > /var/www/html/index.html
-    echo "Ceci n'est pas une page" > /usr/share/nginx/html/custom_404.html
+# Install Nginx
+sudo apt-get install -y nginx
 
-    # Set up rewrite rule, custom header, and error page
-    re_text="rewrite ^/redirect_me https://www.youtube.com/watch?v=jyknCVczn3Q permanent;"
-    h_text="add_header X-Served-By \$hostname;"  # Using $hostname instead of $HOSTNAME
-    err_text="error_page 404 /custom_404.html; location = /custom_404.html {root /usr/share/nginx/html;\n internal;}"
-    sed -i "/listen 80 default_server/a $re_text\n\t$h_text\n\t$err_text" /etc/nginx/sites-available/default
+# Create directory for HTML files
+sudo mkdir -p /var/www/html
 
-    # Restart Nginx service
-    service nginx restart
+# Create index.html with "Hello World!"
+echo "Hello World!" | sudo tee /var/www/html/index.html > /dev/null
+
+# Create 404.html with custom message
+echo "Ceci n'est pas une page" | sudo tee /var/www/html/404.html > /dev/null
+
+# Configure Nginx
+sudo bash -c 'cat > /etc/nginx/sites-available/default' <<EOF
+server {
+    listen 80;
+    listen [::]:80 default_server;
+    add_header X-Served-By \$HOSTNAME;
+    root /var/www/html;
+    index index.html index.htm;
+    location /redirect_me {
+        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
+    }
+    error_page 404 /404.html;
+    location /404 {
+        root /var/www/html;
+        internal;
+    }
 }
+EOF
 
-# Execute the function on both web-01 and web-02
-install_and_configure_nginx;
+# Restart Nginx service
+sudo service nginx restart
 
