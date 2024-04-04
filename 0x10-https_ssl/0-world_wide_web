@@ -3,15 +3,17 @@
 
 get_dns_records() {
     domain="$1"
-    subdomains=("$@")  # Accept subdomains as arguments
+    shift  # Shift the arguments to remove the domain name
 
-    if [[ ${#subdomains[@]} -eq 0 ]]; then
+    if [[ $# -eq 0 ]]; then
         # If no subdomains are provided, use predefined ones
         subdomains=("www" "lb-01" "web-01" "web-02")
+    else
+        subdomains=("$@")
     fi
 
     for subdomain in "${subdomains[@]}"; do
-        response=$(dig "$subdomain.$domain" +short)
+        response=$(dig +short "$subdomain.$domain")
         if [[ -n "$response" ]]; then
             # If there's a response, extract and print information
             record_type=$(dig "$subdomain.$domain" | awk '/ANSWER SECTION/ {getline; print $4}')
@@ -24,5 +26,5 @@ get_dns_records() {
 }
 
 # Example usage:
-get_dns_records "example.com"
+get_dns_records "$@"
 
