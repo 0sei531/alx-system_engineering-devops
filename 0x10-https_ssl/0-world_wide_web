@@ -1,46 +1,28 @@
 #!/usr/bin/env bash
+# Script to retrieve DNS records for domains and subdomains
 
-# Function to print DNS information
-print_dns_info() {
-    local SUB_DOMAIN="$1"
-    local RECORD_TYPE="$2"
-    local DESTINATION="$3"
-
-    echo "The subdomain $SUB_DOMAIN is a $RECORD_TYPE record and points to $DESTINATION"
-}
-
-# Function to perform DNS lookup for a subdomain
-dig_domain() {
-    local SUB_DOMAIN="$1"
-    local DOMAIN="$2"
-
-    dig_output=$(dig "$SUB_DOMAIN.$DOMAIN" | grep -A1 "ANSWER SECTION" | tail -n 1)
-    record=$(echo "$dig_output" | awk '{print $4}')
-    ip=$(echo "$dig_output" | awk '{print $5}')
-    print_dns_info "$SUB_DOMAIN" "$record" "$ip"
-}
-
-# Main function
-main() {
-    declare -a subdomains=("www" "lb-01" "web-01" "web-02")
-
-    if [ $# -lt 1 ]; then
-        echo "Error: Domain argument is missing."
-        exit 1
-    fi
-
+get_dns_records() {
     domain="$1"
-    subdomain="$2"
+    subdomains=("$@")  # Accept subdomains as arguments
 
-    if [ -z "$subdomain" ]; then
-        for element in "${subdomains[@]}"; do
-            dig_domain "$element" "$domain"
-        done
-    else
-        dig_domain "$subdomain" "$domain"
+    if [[ ${#subdomains[@]} -eq 0 ]]; then
+        # If no subdomains are provided, use predefined ones
+        subdomains=("www" "lb-01" "web-01" "web-02")
     fi
+
+    for subdomain in "${subdomains[@]}"; do
+        response=$(dig "$subdomain.$domain" +short)
+        if [[ -n "$response" ]]; then
+            # If there's a response, extract and print information
+            record_type=$(dig "$subdomain.$domain" | awk '/ANSWER SECTION/ {getline; print $4}')
+            destination=$(dig "$subdomain.$domain" | awk '/ANSWER SECTION/ {getline; print $5}')
+            echo "The subdomain $subdomain is a $record_type record and points to $destination"
+        else
+            echo "No records found for $subdomain.$domain"
+        fi
+    done
 }
 
-# Execute main function with provided arguments
-main "$@"
+# Example usage:
+get_dns_records "example.com"
 
