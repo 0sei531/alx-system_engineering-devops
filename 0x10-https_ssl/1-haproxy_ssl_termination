@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+# HAproxy global settings
+global
+    log /dev/log local0
+    log /dev/log local1 notice
+    chroot /var/lib/haproxy
+    stats socket /run/haproxy/admin.sock mode 660 level admin
+    stats timeout 30s
+    user haproxy
+    group haproxy
+    daemon
+
+# HAproxy defaults settings
+defaults
+    log global
+    mode http
+    option httplog
+    option dontlognull
+    timeout connect 5000
+    timeout client 50000
+    timeout server 50000
+
+# HAproxy frontend settings for SSL termination
+frontend ssl_443
+    bind *:443 ssl crt /etc/haproxy/certs/iamitsfoss.tech.pem
+    reqadd X-Forwarded-Proto:\ https
+    default_backend web_servers
+
+# HAproxy frontend settings for HTTP redirection to HTTPS
+frontend iamitsfoss-frontend
+    bind *:80
+    bind *:443 ssl crt /etc/haproxy/certs/iamitsfoss.tech.pem
+    default_backend iamitsfoss-backend
+
+# HAproxy frontend settings for www.rorido.tech
+frontend www.rorido.tech
+    bind *:80
+    bind *:443 ssl crt /etc/ssl/www.rorido.tech/www.rorido.tech.pem
+    redirect scheme https code 301 if !{ ssl_fc }
+    default_backend servers
+
+# HAproxy backend settings for iamitsfoss.tech
+backend iamitsfoss-backend
+    http-request redirect scheme https if !{ ssl_fc }
+    balance roundrobin
+    server 526113-web-01 34.239.255.194:80 check
+    server 526113-web-02 54.164.77.144:80 check
+
+# HAproxy backend settings for www.rorido.tech
+backend servers
+    balance roundrobin
+    server 223389-web-01 18.233.66.73:80 check
+    server 223389-web-02 54.209.204.18:80 check
+

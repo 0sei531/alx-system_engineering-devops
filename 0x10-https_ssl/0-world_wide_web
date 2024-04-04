@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+# Function to print DNS information
+print_dns_info() {
+    local SUB_DOMAIN="$1"
+    local RECORD_TYPE="$2"
+    local DESTINATION="$3"
+
+    echo "The subdomain $SUB_DOMAIN is a $RECORD_TYPE record and points to $DESTINATION"
+}
+
+# Function to perform DNS lookup for a subdomain
+dig_domain() {
+    local SUB_DOMAIN="$1"
+    local DOMAIN="$2"
+
+    dig_output=$(dig "$SUB_DOMAIN.$DOMAIN" | grep -A1 "ANSWER SECTION" | tail -n 1)
+    record=$(echo "$dig_output" | awk '{print $4}')
+    ip=$(echo "$dig_output" | awk '{print $5}')
+    print_dns_info "$SUB_DOMAIN" "$record" "$ip"
+}
+
+# Main function
+main() {
+    declare -a subdomains=("www" "lb-01" "web-01" "web-02")
+
+    if [ $# -lt 1 ]; then
+        echo "Error: Domain argument is missing."
+        exit 1
+    fi
+
+    domain="$1"
+    subdomain="$2"
+
+    if [ -z "$subdomain" ]; then
+        for element in "${subdomains[@]}"; do
+            dig_domain "$element" "$domain"
+        done
+    else
+        dig_domain "$subdomain" "$domain"
+    fi
+}
+
+# Execute main function with provided arguments
+main "$@"
+
