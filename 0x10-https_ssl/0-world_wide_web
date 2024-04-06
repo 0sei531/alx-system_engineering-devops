@@ -1,30 +1,60 @@
-#!/usr/bin/env bash
-# Script to retrieve DNS records for domains and subdomains
+splays information about subdomains.
 
-get_dns_records() {
-    domain="$1"
-    shift  # Shift the arguments to remove the domain name
+# Uncomment for debugging purposes.
+# set -x
 
-    if [[ $# -eq 0 ]]; then
-        # If no subdomains are provided, use predefined ones
-        subdomains=("www" "lb-01" "web-01" "web-02")
-    else
-        subdomains=("$@")
-    fi
+# Colors for output
+blue='\e[1;34m'
+brown='\e[0;33m'
+reset='\033[0m'
 
-    for subdomain in "${subdomains[@]}"; do
-        response=$(dig +short "$subdomain.$domain")
-        if [[ -n "$response" ]]; then
-            # If there's a response, extract and print information
-            record_type=$(dig "$subdomain.$domain" | awk '/ANSWER SECTION/ {getline; print $4}')
-            destination=$(dig "$subdomain.$domain" | awk '/ANSWER SECTION/ {getline; print $5}')
-            echo "The subdomain $subdomain is a $record_type record and points to $destination"
-        else
-            echo "No records found for $subdomain.$domain"
-        fi
-    done
+# Function to display usage message
+usage() {
+    echo "Usage: $0 <domain> [<subdomain>]"
+    exit 1
 }
 
-# Example usage:
-get_dns_records "$@"
+# Function to retrieve DNS information for a subdomain
+dig_cmd() {
+    local domain="$1"
+    local sub="$2"
+    local INFO
+    local IP
+    local RECORD
+
+    # Retrieve DNS information
+    INFO=$(dig "$sub.$domain" +short)
+    if [ $? -eq 0 ]; then
+        IP=$(echo "$INFO" | awk '{print $1}')
+        RECORD=$(dig "$sub.$domain" | grep -A1 'ANSWER SECTION:' | tail -n1 | awk '{print $4}')
+        # Output information about the subdomain
+        echo -e "${brown}The subdomain ${blue}$sub${brown} is a ${blue}$RECORD record${brown} and points to ${blue}$IP${reset}"
+    else
+        echo -e "${brown}Failed to retrieve DNS information for subdomain ${blue}$sub${reset}"
+    fi
+}
+
+# Main script starts here
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+    usage
+fi
+
+domain="$1"
+sub="$2"
+
+# Check if the domain name is valid (simple check for presence of dot)
+if [[ ! "$domain" == *"."* ]]; then
+    echo "Invalid domain name: $domain"
+    usage
+fi
+
+# Retrieve DNS information for subdomains
+if [ $# -eq 1 ]; then
+    subdomains=( "www" "lb-01" "web-01" "web-02" )
+    for subs in "${subdomains[@]}"; do
+        dig_cmd "$domain" "$subs"
+    done
+elif [ $# -eq 2 ]; then
+    dig_cmd "$domain" "$sub"
+fi
 
