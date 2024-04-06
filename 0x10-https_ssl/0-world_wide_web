@@ -1,25 +1,49 @@
 #!/usr/bin/env bash
-# script to dig subdomain records for the domain specified
-# shellcheck disable=SC2027
-# shellcheck disable=SC2086
+# This script displays information about subdomains.
 
-function get_a_records(){
-    if [[ -n "$2" ]]; then
-        response="$(dig "$2.$1" | grep -i -A1 "answer section" | tail -n 1)"
-        destination="$(echo "$response" | awk '{ print $5 }')"
-        record_type="$(echo "$response" | awk '{ print $4 }')"
-        echo  "The subdomain "$2" is a "$record_type" record and points to "$destination""
-
+# Function to retrieve A records for a subdomain
+get_a_records() {
+    local domain="$1"
+    local sub="$2"
+    local response
+    if [[ -n "$sub" ]]; then
+        response=$(dig +short "$sub.$domain" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$')
+        if [[ -z "$response" ]]; then
+            echo "Subdomain '$sub' does not exist for domain '$domain'"
+        else
+            echo "The subdomain '$sub' is an A record and points to '$response'"
+        fi
     else
-        subdomains=(www lb-01 web-01 web-02)
+        local subdomains=("www" "lb-01" "web-01" "web-02")
         for sub_d in "${subdomains[@]}"; do
-            response="$(dig "$sub_d.$1" | grep -i -A1 "answer section" | tail -n 1)"
-            destination="$(echo ""$response"" | awk '{ print $5 }')"
-            record_type="$(echo """$response""" | awk '{ print $4 }')"
-            echo "The subdomain ""$sub_d"" is a ""$record_type"" record and points to ""$destination"""
-
+            response=$(dig +short "$sub_d.$domain" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$')
+            if [[ -z "$response" ]]; then
+                echo "Subdomain '$sub_d' does not exist for domain '$domain'"
+            else
+                echo "The subdomain '$sub_d' is an A record and points to '$response'"
+            fi
         done
     fi
- 
 }
-get_a_records "$1" "$2";
+
+# Main function
+main() {
+    if [[ $# -lt 1 || $# -gt 2 ]]; then
+        echo "Usage: $0 <domain> [subdomain]"
+        exit 1
+    fi
+    local domain="$1"
+    local sub="$2"
+    if [[ $# -eq 1 ]]; then
+        get_a_records "$domain" "www"
+        get_a_records "$domain" "lb-01"
+        get_a_records "$domain" "web-01"
+        get_a_records "$domain" "web-02"
+    elif [[ $# -eq 2 ]]; then
+        get_a_records "$domain" "$sub"
+    fi
+}
+
+# Execute main function
+main "$@"
+
