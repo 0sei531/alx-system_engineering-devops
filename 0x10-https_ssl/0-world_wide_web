@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 # This script displays information about subdomains.
-
 # Function to retrieve A records for a subdomain
 get_a_records() {
     local domain="$1"
     local sub="$2"
     local response
     if [[ -n "$sub" ]]; then
-        response=$(dig +short "$sub.$domain" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$')
+        response=$(dig +short "$sub.$domain" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
         if [[ -z "$response" ]]; then
             echo "Subdomain '$sub' does not exist for domain '$domain'"
         else
@@ -16,7 +15,7 @@ get_a_records() {
     else
         local subdomains=("www" "lb-01" "web-01" "web-02")
         for sub_d in "${subdomains[@]}"; do
-            response=$(dig +short "$sub_d.$domain" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$')
+            response=$(dig +short "$sub_d.$domain" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
             if [[ -z "$response" ]]; then
                 echo "Subdomain '$sub_d' does not exist for domain '$domain'"
             else
