@@ -1,41 +1,29 @@
-
 #!/usr/bin/python3
 """ Queries REST API for employee info
     argv 1 = int employee ID
 """
+import requests
+import sys
+
+def get_employee_info(employee_id):
+    url = "https://jsonplaceholder.typicode.com/"
+    user = requests.get(url + "users/{}".format(employee_id)).json()
+    todos = requests.get(url + "todos", params={"userId": employee_id}).json()
+
+    completed_tasks = [task.get("title") for task in todos if task.get("completed")]
+    total_tasks = len(todos)
+    completed_task_count = len(completed_tasks)
+
+    return user.get("name"), completed_task_count, total_tasks, completed_tasks
+
 if __name__ == "__main__":
-    import requests as r
-    from sys import argv
+    if len(sys.argv) != 2:
+        print("Usage: {} <employee_id>".format(sys.argv[0]))
+        sys.exit(1)
 
-    # Finds employee name by "id" param in /users/
-    name_q = r.get("https://jsonplaceholder.typicode.com/users/{}/"
-                   .format(argv[1]))
-    data = name_q.json()
-    employee_name = data.get("name")
+    employee_id = int(sys.argv[1])
+    employee_name, completed_task_count, total_tasks, completed_tasks = get_employee_info(employee_id)
 
-    # Finds employee tasks by "userID" param; /users/ & /todo/ are linked
-    url = "https://jsonplaceholder.typicode.com/users/1/todos/"
-    task_q = r.get(url, params={'userId': argv[1]})
-    data = task_q.json()
-
-    # Finds total number of tasks
-    task_total = len(data)
-
-    # Finds total number of completed tasks
-    task_completed = 0
-    for dicts in data:
-        for k, v in dicts.items():
-            if k == 'completed' and v is True:
-                    task_completed += 1
-
-    # Prints first line in specified format:
-
-    print("Employee {} is done with tasks({}/{}):"
-          .format(employee_name, task_completed, task_total))
-
-    # Prints subsequent lines as titles of completed tasks:
-
-    for dicts in data:
-        for k, v in dicts.items():
-            if k == 'completed' and v is True:
-                    print("\t {}".format(dicts['title']))
+    print("Employee {} is done with tasks({}/{}):".format(employee_name, completed_task_count, total_tasks))
+    for task in completed_tasks:
+        print("\t", task)
