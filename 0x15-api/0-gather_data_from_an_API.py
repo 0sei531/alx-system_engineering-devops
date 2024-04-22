@@ -1,33 +1,31 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
+"""
+Gathers data from a REST API about a given employee's TODO list progress
+"""
 
-"""Gather data from an API and export the result in JSON format."""
-
-import json
 import requests
 from sys import argv
 
-
 if __name__ == "__main__":
-    if len(argv) != 2:
-        exit("Usage: {} <USER_ID>".format(argv[0]))
-
     user_id = argv[1]
-    user_url = 'https://jsonplaceholder.typicode.com/users/{}'.format(user_id)
-    todo_url = 'https://jsonplaceholder.typicode.com/users/{}/todos'\
-               .format(user_id)
+    api_url = 'https://jsonplaceholder.typicode.com/'
 
-    user = requests.get(user_url).json()
-    todos = requests.get(todo_url).json()
+    # Fetch user data
+    response_user = requests.get(api_url + 'users/' + user_id)
+    user_data = response_user.json()
+    employee_name = user_data.get('name')
 
-    todo_list = []
-    for todo in todos:
-        task = {
-            "task": todo.get("title"),
-            "completed": todo.get("completed"),
-            "username": user.get("username")
-        }
-        todo_list.append(task)
+    # Fetch tasks data
+    response_tasks = requests.get(api_url + 'todos', params={'userId': user_id})
+    tasks_data = response_tasks.json()
 
-    output = {user_id: todo_list}
-    with open(user_id + ".json", "w") as json_file:
-        json.dump(output, json_file)
+    # Calculate progress
+    total_tasks = len(tasks_data)
+    completed_tasks = sum(task['completed'] for task in tasks_data)
+
+    # Display progress
+    print(f"Employee {employee_name} is done with tasks ({completed_tasks}/{total_tasks}):")
+    for task in tasks_data:
+        if task['completed']:
+            print(f"\t {task['title']}")
+
