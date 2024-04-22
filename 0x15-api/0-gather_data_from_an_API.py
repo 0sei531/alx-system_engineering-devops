@@ -1,31 +1,41 @@
-#!/usr/bin/env python3
-"""
-Gathers data from a REST API about a given employee's TODO list progress
-"""
 
-import requests
-from sys import argv
-
+#!/usr/bin/python3
+""" Queries REST API for employee info
+    argv 1 = int employee ID
+"""
 if __name__ == "__main__":
-    user_id = argv[1]
-    api_url = 'https://jsonplaceholder.typicode.com/'
+    import requests as r
+    from sys import argv
 
-    # Fetch user data
-    response_user = requests.get(api_url + 'users/' + user_id)
-    user_data = response_user.json()
-    employee_name = user_data.get('name')
+    # Finds employee name by "id" param in /users/
+    name_q = r.get("https://jsonplaceholder.typicode.com/users/{}/"
+                   .format(argv[1]))
+    data = name_q.json()
+    employee_name = data.get("name")
 
-    # Fetch tasks data
-    response_tasks = requests.get(api_url + 'todos', params={'userId': user_id})
-    tasks_data = response_tasks.json()
+    # Finds employee tasks by "userID" param; /users/ & /todo/ are linked
+    url = "https://jsonplaceholder.typicode.com/users/1/todos/"
+    task_q = r.get(url, params={'userId': argv[1]})
+    data = task_q.json()
 
-    # Calculate progress
-    total_tasks = len(tasks_data)
-    completed_tasks = sum(task['completed'] for task in tasks_data)
+    # Finds total number of tasks
+    task_total = len(data)
 
-    # Display progress
-    print(f"Employee {employee_name} is done with tasks ({completed_tasks}/{total_tasks}):")
-    for task in tasks_data:
-        if task['completed']:
-            print(f"\t {task['title']}")
+    # Finds total number of completed tasks
+    task_completed = 0
+    for dicts in data:
+        for k, v in dicts.items():
+            if k == 'completed' and v is True:
+                    task_completed += 1
 
+    # Prints first line in specified format:
+
+    print("Employee {} is done with tasks({}/{}):"
+          .format(employee_name, task_completed, task_total))
+
+    # Prints subsequent lines as titles of completed tasks:
+
+    for dicts in data:
+        for k, v in dicts.items():
+            if k == 'completed' and v is True:
+                    print("\t {}".format(dicts['title']))
