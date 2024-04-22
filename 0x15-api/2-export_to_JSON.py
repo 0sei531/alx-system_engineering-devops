@@ -1,24 +1,33 @@
 #!/usr/bin/python3
-""" Queries REST API for employee info, exports to JSON
-    argv 1 = int employee ID
-"""
+"""Exports all to-do list information for all employees to JSON format."""
 import json
-import requests as r
-from sys import argv
+import requests
 
 if __name__ == "__main__":
-    user_id = argv[1]
-    # Finds employee username by "id" param in /users/
-    name_response = r.get("https://jsonplaceholder.typicode.com/users/{}".format(user_id))
-    user_data = name_response.json()
-    username = user_data.get("username")
+    url = "https://jsonplaceholder.typicode.com"
+    users = requests.get(url + "/users").json()
 
-    # Finds employee tasks by "userID" param; /users/ & /todo/ are linked
-    task_response = r.get("https://jsonplaceholder.typicode.com/todos", params={'userId': user_id})
-    tasks_data = task_response.json()
+    all_tasks = {}
 
-    # Creates JSON object with request data, writes to .json file
-    json_data = {user_id: [{"task": task.get("title"), "completed": task.get("completed"), "username": username} for task in tasks_data]}
+    for user in users:
+        user_id = user["id"]
+        username = user["username"]
 
-    with open("{}.json".format(user_id), 'w') as jsonfile:
-        json.dump(json_data, jsonfile)
+        todos_url = url + "/todos"
+        todos_params = {"userId": user_id}
+        todos = requests.get(todos_url, params=todos_params).json()
+
+        user_tasks = []
+        for todo in todos:
+            task = {
+                "username": username,
+                "task": todo["title"],
+                "completed": todo["completed"]
+            }
+            user_tasks.append(task)
+
+        all_tasks[str(user_id)] = user_tasks
+
+    output_file = "todo_all_employees.json"
+    with open(output_file, "w") as jsonfile:
+        json.dump(all_tasks, jsonfile)

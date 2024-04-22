@@ -1,34 +1,23 @@
 #!/usr/bin/python3
-""" Queries REST API for employee info, exports to CSV
-    "USER_ID","USERNAME","TASK_COMPLETED_STATUS","TASK_TITLE"
-    argv 1 = int employee ID
-"""
+
+"""Exports all users' todo list information to CSV format."""
+
 import csv
 import requests
-from sys import argv
-
-def export_to_csv(user_id):
-    url = "https://jsonplaceholder.typicode.com/"
-    
-    # Retrieve user information
-    user_response = requests.get(url + "users/{}".format(user_id))
-    user_data = user_response.json()
-    username = user_data.get("username")
-    
-    # Retrieve user's tasks
-    tasks_response = requests.get(url + "todos", params={"userId": user_id})
-    tasks_data = tasks_response.json()
-    
-    # Write data to CSV file
-    with open('{}.csv'.format(user_id), 'w', newline='') as csvfile:
-        csv_writer = csv.writer(csvfile)
-        csv_writer.writerow(["USER_ID", "USERNAME", "TASK_COMPLETED_STATUS", "TASK_TITLE"])
-        for task in tasks_data:
-            csv_writer.writerow([user_id, username, task["completed"], task["title"]])
+import sys
 
 if __name__ == "__main__":
-    if len(argv) != 2:
-        print("Usage: {} <employee_id>".format(argv[0]))
-        exit(1)
-    user_id = argv[1]
-    export_to_csv(user_id)
+    if len(sys.argv) != 2:
+        sys.exit("Usage: {} USER_ID".format(sys.argv[0]))
+
+    user_id = sys.argv[1]
+    user = requests.get("https://jsonplaceholder.typicode.com/users/{}"
+                        .format(user_id)).json()
+    todos = requests.get("https://jsonplaceholder.typicode.com/todos",
+                         params={"userId": user_id}).json()
+
+    with open(user_id + ".csv", "w") as csv_file:
+        writer = csv.writer(csv_file, quoting=csv.QUOTE_ALL)
+        for todo in todos:
+            writer.writerow([user_id, user.get("username"),
+                             todo.get("completed"), todo.get("title")])
