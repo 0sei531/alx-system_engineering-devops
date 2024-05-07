@@ -1,26 +1,34 @@
 #!/usr/bin/python3
-"""Function to query subscribers on a given Reddit subreddit."""
+"""
+Retrieve the number of subscribers for a given subreddit using Reddit API.
+"""
+
 import requests
 
 
 def number_of_subscribers(subreddit):
     """
-    Retrieve the total number of subscribers for a given subreddit.
+    Retrieve the number of subscribers for a given subreddit.
 
     Args:
-    subreddit (str): The name of the subreddit to query.
+    subreddit (str): The name of the subreddit.
 
     Returns:
-    int: The total number of subscribers if the subreddit exists, otherwise 0.
+    int: The number of subscribers,
+    or 0 if the subreddit is invalid or inaccessible.
     """
-    url = "https://www.reddit.com/r/{}/about.json".format(subreddit)
-    headers = {
-        "User-Agent": "linux:0x16.api.advanced:v1.0.0 (by /u/bdov_)"
-    }
-    response = requests.get(url, headers=headers, allow_redirects=False)
 
-    if response.status_code == 200:
-        data = response.json().get("data")
-        if data:
-            return data.get("subscribers", 0)
-    return 0
+    if not subreddit or not isinstance(subreddit, str):
+        return 0
+
+    user_agent = {'User-agent': 'Google Chrome Version 81.0.4044.129'}
+    url = ('https://www.reddit.com/r/{}/about'
+           '.json').format(subreddit)
+
+    try:
+        response = requests.get(url, headers=user_agent)
+        response.raise_for_status()  # Raise exception for non-2xx status codes
+        data = response.json()
+        return data.get('data', {}).get('subscribers', 0)
+    except (requests.RequestException, ValueError, KeyError):
+        return 0
