@@ -1,25 +1,37 @@
 #!/usr/bin/python3
-"""Module for task 1"""
+
+"""Function to print top 10 hot posts on a given Reddit subreddit."""
 
 import requests
 
 
 def top_ten(subreddit):
-    """Queries the Reddit API and returns
-       the top 10 hot posts of the subreddit
-    """
-    user_agent = {"User-Agent": "My-User-Agent"}
-    url = f"https://www.reddit.com/r/{subreddit}/hot.json?limit=10"
+    """Print the titles of the first 10 hot posts listed for a given subreddit."""
+    url = f"https://www.reddit.com/r/{subreddit}/hot/.json"
+    headers = {
+        "User-Agent": "linux:0x16.api.advanced:v1.0.0 (by /u/bdov_)"
+    }
+    params = {
+        "limit": 10
+    }
 
     try:
-        response = requests.get(url, headers=user_agent, allow_redirects=False)
-        response.raise_for_status()  # Raise exception for non-2xx status codes
-
-        data = response.json().get("data")
-        if data:
-            for child in data.get("children"):
+        response = requests.get(url, headers=headers, params=params, allow_redirects=False)
+        if response.status_code == 200:
+            results = response.json().get("data")
+            for child in results.get("children"):
                 print(child.get("data").get("title"))
         else:
             print("None")
-    except requests.RequestException:
+    except requests.RequestException as e:
+        print("Error occurred:", e)
         print("None")
+
+# Test the function
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) < 2:
+        print("Please pass an argument for the subreddit to search.")
+    else:
+        subreddit = sys.argv[1]
+        top_ten(subreddit)

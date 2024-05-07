@@ -1,25 +1,31 @@
 #!/usr/bin/python3
-"""Module for task 0"""
+
+"""Queries the Reddit API for subreddit subscriber count."""
 
 import requests
 
 
 def number_of_subscribers(subreddit):
-    """
-       Queries the Reddit API and returns the
-       number of subscribers to the subreddit
-    """
-    user_agent = {"User-Agent": "My-User-Agent"}
+    """Return total number of subscribers on a subreddit."""
     url = f"https://www.reddit.com/r/{subreddit}/about.json"
+    headers = {"User-Agent": "My-User-Agent"}
 
     try:
-        response = requests.get(url, headers=user_agent, allow_redirects=False)
-        response.raise_for_status()  # Raise exception for non-2xx status codes
-
-        data = response.json().get("data")
-        if data:
-            return data.get("subscribers", 0)
+        response = requests.get(url, headers=headers, allow_redirects=False)
+        if response.status_code == 200:
+            data = response.json().get("data")
+            return data.get("subscribers")
         else:
             return 0
-    except requests.RequestException:
+    except requests.RequestException as e:
+        print(f"Error occurred: {e}")
         return 0
+
+# Test the function
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) < 2:
+        print("Please pass an argument for the subreddit to search.")
+    else:
+        subreddit = sys.argv[1]
+        print(number_of_subscribers(subreddit))
