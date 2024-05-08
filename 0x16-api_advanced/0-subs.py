@@ -1,9 +1,8 @@
- #!/usr/bin/python3
+#!/usr/bin/python3
 
 """Queries the Reddit API for subreddit subscriber count."""
 
 import requests
-import sys
 
 
 def number_of_subscribers(subreddit):
@@ -22,13 +21,11 @@ def number_of_subscribers(subreddit):
         print(f"Error occurred: {e}")
         return 0
 
+# Test the function
 if __name__ == "__main__":
+    import sys
     if len(sys.argv) < 2:
         print("Please pass an argument for the subreddit to search.")
     else:
         subreddit = sys.argv[1]
-        subscribers = number_of_subscribers(subreddit)
-        if subscribers != 0:
-            print("OK")
-        else:
-            print("Not Found")
+        print(number_of_subscribers(subreddit))
