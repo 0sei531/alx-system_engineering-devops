@@ -1,10 +1,10 @@
-#!/usr/bin/python3
+ #!/usr/bin/python3
 
 """Queries the Reddit API for subreddit subscriber count."""
 
-
 import requests
 import sys
+
 
 def number_of_subscribers(subreddit):
     """Return total number of subscribers on a subreddit."""
@@ -29,6 +29,6 @@ if __name__ == "__main__":
         subreddit = sys.argv[1]
         subscribers = number_of_subscribers(subreddit)
         if subscribers != 0:
-            print("Existing Subreddit")
+            print("OK")
         else:
-            print("Non-existing subreddit")
+            print("Not Found")
